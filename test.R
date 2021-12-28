@@ -8,40 +8,26 @@ df <- almacenes
 
 ## NUMEROS PRIMERO
 # df$DOMICILIO_ELECTORAL <-  df$DOMICILIO_ELECTORAL %>%
-number_first <- function(col){
-  df$DIRECCION <-  df$DIRECCION %>%
+number_first <- function(df,col){
+  df[[col]] <-  df[[col]] %>%
     str_replace('^([a-zA-Z \\.]+)([\\d]+)','\\2 \\1') %>%
     str_replace('  .*','')
+  
+  return(df)
 }
 
 local_nominatim <- function(df,params = params, fill = F , url = 'http://localhost:8080', min_time = 0.01 ){
-  if ( params$street %in% names(df) ){
-    street <- df %>% pull(params$street)
-  } else if (fill == T){
-    street <- params$street
-  } else{
-    street <- NULL
-  }
-  if ( params$city %in% names(df) ){
-    city <- df %>% pull(params$city)
-  } else if (fill == T){
-    city <- params$city
-  } else{
-    city <- NULL
-  }
-  if ( params$county %in% names(df) ){
-    county <- df %>% pull(params$county)
-  } else if (fill == T){
-    county <- params$county
-  } else{
-    county <- NULL
-  }
-  if ( params$state %in% names(df) ){
-    state <- df %>% pull(params$state)
-  } else if (fill == T){
-    state <- params$state
-  } else{
-    state <- NULL
+  
+  for (var_name in c('street','city','county','state')){
+    parameter <- params[[var_name]]
+
+    if (parameter %in% names(df)){
+      assign(var_name, df[[parameter]])
+    } else if (fill == T){
+      assign(var_name, parameter)
+    } else{
+      assign(var_name, NULL)
+    }
   }
   
   if (fill == T){
@@ -55,6 +41,7 @@ local_nominatim <- function(df,params = params, fill = F , url = 'http://localho
   }
   
   t <- geo(street = street, city = city, county = county, state = state, method = 'osm',api_url = url , min_time = min_time )
+  
   return(t)
 }
 
@@ -62,6 +49,18 @@ blocks_by_n <- function(df,n){
   s <- split(df, (as.numeric(rownames(df))-1) %/% n)
   return(s)
 }
+
+local_nominatim_parallel <- function(df,blocks_of ,cores = availableCores() -1){
+  plan(multissesion, workers = cores)
+    
+  blocks <- blocks_by_n(df,blocks_of)
+  geoloc_df <- future_map_dfr(blocks, function(x) local_nominatim(x,params,url = 'http://localhost:9999', min_time = 0.01))
+  
+  return(geoloc_df)
+}
+
+###################################
+###################################
 
 params <- list( street = 'DIRECCION',
                 city = 'PUENTE ALTO',
@@ -72,10 +71,9 @@ params <- list( street = 'DIRECCION',
 t <- local_nominatim(df, params, fill = T, url = 'http://localhost:9999')
 
 ## PARALELIZADO
-plan(multisession, workers = 10)
 
-s <- blocks_by_n(df,5000)
+
+
 
 tic()
-prueba <- future_map_dfr(s, function(x) local_nominatim(x,params,url = 'http://localhost:9999', min_time = 0.01))
 toc()
