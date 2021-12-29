@@ -3,8 +3,8 @@ library(tidyverse)
 library(stringr)
 library(furrr)
 
-# df <- read.csv('padron_spp.xls',sep=';')
-df <- almacenes
+df <- read.csv('padron_spp.xls',sep=';')
+# df <- almacenes
 
 ## NUMEROS PRIMERO
 # df$DOMICILIO_ELECTORAL <-  df$DOMICILIO_ELECTORAL %>%
@@ -16,31 +16,30 @@ number_first <- function(df,col){
   return(df)
 }
 
-local_nominatim <- function(df,params = params, fill = F , url = 'http://localhost:8080', min_time = 0.01 ){
+local_nominatim <- function(df,params = params, url = 'http://localhost:8080', min_time = 0.01 ){
   
   for (var_name in c('street','city','county','state')){
     parameter <- params[[var_name]]
 
     if (parameter %in% names(df)){
       assign(var_name, df[[parameter]])
-    } else if (fill == T){
-      assign(var_name, parameter)
     } else{
-      assign(var_name, NULL)
+      assign(var_name, parameter)
     }
   }
   
-  if (fill == T){
-    M <- max(sapply(list(street,city,county,state), length))
+  Max <- max(sapply(list(street,city,county,state), length))
+  Min <- min(sapply(list(street,city,county,state), length))
+  if (Min == 1){
     for (var_name in c('street','city','county','state') ){
       var <- get(var_name)
       if (length(var) == 1){
-        assign(var_name,rep(var,M))
+        assign(var_name,rep(var,Max))
       }
     }
   }
   
-  t <- geo(street = street, city = city, county = county, state = state, method = 'osm',api_url = url , min_time = min_time )
+  t <- geo(street = street, city = city, county = county, state = state, method = 'arcgis' , min_time = min_time , full_results = T, flatten = F)
   
   return(t)
 }
@@ -50,11 +49,11 @@ blocks_by_n <- function(df,n){
   return(s)
 }
 
-local_nominatim_parallel <- function(df,blocks_of ,cores = availableCores() -1){
-  plan(multissesion, workers = cores)
+local_nominatim_parallel <- function(df,params,blocks_of, url, cores = availableCores() -1){
+  plan(multisession, workers = cores)
     
   blocks <- blocks_by_n(df,blocks_of)
-  geoloc_df <- future_map_dfr(blocks, function(x) local_nominatim(x,params,url = 'http://localhost:9999', min_time = 0.01))
+  geoloc_df <- future_map_dfr(blocks, function(x) local_nominatim(x,params,url = url, min_time = 0.01))
   
   return(geoloc_df)
 }
@@ -63,17 +62,18 @@ local_nominatim_parallel <- function(df,blocks_of ,cores = availableCores() -1){
 ###################################
 
 params <- list( street = 'DIRECCION',
-                city = 'PUENTE ALTO',
-                county = 'PROVINCIA DE SANTIAGO',
-                state = 'REGION METROPOLITANA')
+                city = 'Puente Alto',
+                county = 'Provincia de Santiago',
+                state = 'Metropolitana')
 
 ## NORMAL
-t <- local_nominatim(df, params, fill = T, url = 'http://localhost:9999')
+df <- df %>% number_first('DIRECCION')
+
+t <- local_nominatim(head(df,10), params, url = 'http://localhost:9999')
+t2 <- local_nominatim(df, params)
+t <- local_nominatim_parallel(df, params, blocks_of = 5000, url = 'http://localhost:9999', cores = 10)
 
 ## PARALELIZADO
 
 
 
-
-tic()
-toc()
