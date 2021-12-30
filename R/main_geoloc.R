@@ -22,7 +22,7 @@ params1 <- list(street = 'DIRECCION',
 
 params2 <- list(street = 'DOMICILIO_ELECTORAL',
                 city = 'COMUNA',
-                county = 'PROVINCA',
+                county = 'PROVINCIA',
                 state = 'GREGION')
 
 
