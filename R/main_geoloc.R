@@ -1,4 +1,4 @@
-source('R/funciones_geoloc.R')
+source(paste0(this.path::this.dir(), '/funciones_geoloc.R'))
 
 library(readxl)
 
