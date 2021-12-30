@@ -1,24 +1,33 @@
 source('R/funciones_geoloc.R')
 
+library(readxl)
+
 ### Cargar direcciones
 
+df1 <- read_excel("data/SUPERMERCADOS Y ALMACENES.xls", sheet = "ALMACEN")
+df2 <- read.csv('data/padron.csv')
 
-
-
+### Fijar Numero Primero
+df1 <- df1 %>% number_first('DIRECCION')
+df2 <- df2 %>% number_first('DOMICILIO_ELECTORAL')
 
 
 ### Configurar Parametros
-params <- list( street = 'DIRECCION',
+params1 <- list(street = 'DIRECCION',
                 city = 'Puente Alto',
                 county = 'Provincia de Santiago',
                 state = 'Metropolitana')
 
-### Fijar Numero Primero
-df <- df %>% number_first('DIRECCION')
+params2 <- list(street = 'DOMICILIO_ELECTORAL',
+                city = 'COMUNA',
+                county = 'PROVINCA',
+                state = 'GREGION')
 
 
 ### Geocoding Normal
-t <- local_nominatim(df1, params, url = 'http://localhost:9999')
+t <- local_nominatim(df1, params1, url = 'http://localhost:9999')
 
-## PARALELIZADO
-t <- local_nominatim_parallel(df2, params, blocks_of = 5000, url = 'http://localhost:9999', cores = 10)
+###############
+
+### Geocoding Paralelizado
+t <- local_nominatim_parallel(df2, params2, blocks_of = 5000, url = 'http://localhost:9999', cores = 10)
