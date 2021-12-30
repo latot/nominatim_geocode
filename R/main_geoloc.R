@@ -1,11 +1,12 @@
+### Indicar la ruta de las funciones de geoloc en referencia al script
 source(paste0(this.path::this.dir(), '/funciones_geoloc.R'))
 
 library(readxl)
 
 ### Cargar direcciones
 
-df1 <- read_excel("data/SUPERMERCADOS Y ALMACENES.xls", sheet = "ALMACEN")
-df2 <- read.csv('data/padron.csv')
+df1 <- read_excel(paste0(this.path::this.dir(), "/../data/SUPERMERCADOS Y ALMACENES.xls"), sheet = "ALMACEN")
+df2 <- read.csv(paste0(this.path::this.dir(), '/../data/padron.csv'))
 
 ### Fijar Numero Primero
 df1 <- df1 %>% number_first('DIRECCION')
@@ -25,7 +26,7 @@ params2 <- list(street = 'DOMICILIO_ELECTORAL',
 
 
 ### Geocoding Normal
-t <- local_nominatim(df1, params1, url = 'http://localhost:9999')
+#t <- local_nominatim(df1, params1, url = 'http://localhost:9999')
 
 ###############
 
