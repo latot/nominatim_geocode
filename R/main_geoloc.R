@@ -26,7 +26,7 @@ params2 <- list(street = 'DOMICILIO_ELECTORAL',
 
 
 ### Geocoding Normal
-#t <- local_nominatim(df1, params1, url = 'http://localhost:9999')
+t <- local_nominatim(df1, params1, url = 'http://localhost:9999')
 
 ###############
 
