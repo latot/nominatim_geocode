@@ -1,12 +1,13 @@
-### Indicar la ruta de las funciones de geoloc en referencia al script
-source(paste0(this.path::this.dir(), '/funciones_geoloc.R'))
+### Indicar la ruta del archivo geoloc en referencia al script
+current_path <- this.path::this.dir()
+source(paste0(current_path, '/funciones_geoloc.R'))
 
 library(readxl)
 
 ### Cargar direcciones
 
-df1 <- read_excel(paste0(this.path::this.dir(), "/../data/SUPERMERCADOS Y ALMACENES.xls"), sheet = "ALMACEN")
-df2 <- read.csv(paste0(this.path::this.dir(), '/../data/padron.csv'))
+df1 <- read_excel(paste0(current_path, "/../data/SUPERMERCADOS Y ALMACENES.xls"), sheet = "ALMACEN")
+df2 <- read.csv(paste0(current_path, '/../data/padron.csv'))
 
 ### Fijar Numero Primero
 df1 <- df1 %>% number_first('DIRECCION')
